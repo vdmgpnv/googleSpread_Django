@@ -1,10 +1,9 @@
 from datetime import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, ForeignKey, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import schedule
 from sqlalchemy.orm import sessionmaker
 from get_data import WorkWithData
-import psycopg2
 from config import DB, DB_NAME, DB_PASSWORD, DB_HOST
 from bot import Bot
 
@@ -51,6 +50,7 @@ def insert_data(data, exchange_rate, bot):
     
 
 def get_data(data_class):
+    '''Сбор необходимых данных для проверки и вставки в баззу банных'''
     bot = Bot()
     spread_data = data_class.get_data_from_sheet()
     exchange_rate = data_class.get_exchange_rate()
@@ -58,9 +58,10 @@ def get_data(data_class):
 
 
 def main():
-    '''Каждый час данные обновляются и проверяются в таблице'''
+    '''Каждый час данные обновляются и проверяются в БД'''
     data_class = WorkWithData()
-    schedule.every().minute.do(get_data, data_class=data_class) 
+    get_data(data_class)
+    schedule.every().hour.do(get_data, data_class=data_class) #меняя hour на minute можно задать выполнение каждую минуту
     while True:
         schedule.run_pending()
 

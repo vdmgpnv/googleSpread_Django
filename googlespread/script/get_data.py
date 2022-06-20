@@ -3,7 +3,6 @@ import requests
 import apiclient
 from oauth2client.service_account import ServiceAccountCredentials
 import re
-from datetime import datetime
 from requests.exceptions import HTTPError
 
 
@@ -36,14 +35,14 @@ class WorkWithData:
     
     
     def get_exchange_rate(self, id='R01235'):
-        '''Метод запрашивает курс валюты по ID(по умолчанию доллар) на данный момент'''
+        '''Метод запрашивает курс валюты по ID(по умолчанию доллар) на данный момент и возвращает значение курса'''
         try:
             req = requests.get('http://www.cbr.ru/scripts/XML_daily.asp')
         
         except HTTPError as http_err:
-            print(f'HTTP error occurred: {http_err}')  # Python 3.6
+            print(f'HTTP error occurred: {http_err}')  
         except Exception as err:
-            print(f'Other error occurred: {err}')  # Python 3.6
+            print(f'Other error occurred: {err}')  
         
         course_info = re.search(fr'<Valute ID="{id}">.+?</Valute>', req.text)
         course = re.search('\d+,\d+', course_info[0])
