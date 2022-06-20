@@ -1,24 +1,15 @@
 from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, ForeignKey, Float, DateTime
-"""Модуль с образами для базы данных"""
 from sqlalchemy.ext.declarative import declarative_base
 import schedule
 from sqlalchemy.orm import sessionmaker
 from get_data import WorkWithData
-from config import DATABASE_URI
+import psycopg2
+from config import DB, DB_NAME, DB_PASSWORD, DB_HOST
 from bot import Bot
 
 Base = declarative_base()
-
-def db_connect(db_path):
-    '''Подключение к БД'''
-    try:
-        engine = create_engine(db_path)
-    except:
-        print('ErrorConnection')
-    return engine
-
-metadata = MetaData(bind=db_connect(DATABASE_URI))
+engine = create_engine(f'postgresql+psycopg2://{DB}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}')
 
 
 class Order(Base):  
@@ -31,7 +22,7 @@ class Order(Base):
     price_in_RUB = Column(Float)
        
 
-Session = sessionmaker(bind=db_connect(DATABASE_URI))
+Session = sessionmaker(engine)
 
 
 def insert_data(data, exchange_rate, bot):
@@ -45,14 +36,14 @@ def insert_data(data, exchange_rate, bot):
             order = session.query(Order).filter(Order.order_number==r[1])
             if order.count() > 0:
                 order.price_in_USD = r[2]
-                order.delivery_date = r[3]
+                order.delivery_date = datetime.strptime(r[3], '%d.%m.%Y')
                 order.price_in_RUB = r[2]*float(exchange_rate)
                 session.commit()
             else:
                 row = Order(
                 order_number = r[1],
                 price_in_USD = r[2],
-                delivery_date = r[3],
+                delivery_date = datetime.strptime(r[3], '%d.%m.%Y'),
                 price_in_RUB = r[2]*float(exchange_rate)
                 )
                 session.add(row)
@@ -67,12 +58,14 @@ def get_data(data_class):
 
 
 def main():
-    '''Каждые 30 секунд данные обновляются и проверяются в таблице'''
+    '''Каждый час данные обновляются и проверяются в таблице'''
     data_class = WorkWithData()
-    schedule.every().hour.do(get_data, data_class=data_class) 
+    schedule.every().minute.do(get_data, data_class=data_class) 
     while True:
         schedule.run_pending()
 
 
 if __name__ == '__main__':
+    #Base.metadata.drop_all(engine)
+    #Base.metadata.create_all(engine)
     main()

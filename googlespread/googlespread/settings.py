@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from script.config import DB, DB_NAME, DB_PASSWORD, DB_HOST
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,13 +84,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
 
-        'NAME': 'spread_data',
+        'NAME': f'{DB_NAME}',
 
-        'USER': 'postgres',
+        'USER': f'{DB}',
 
-        'PASSWORD': '123321105qQ',
+        'PASSWORD': f'{DB_PASSWORD}',
 
-        'HOST': '127.0.0.1',
+        'HOST': f'{DB_HOST}',
 
         'PORT': '5432',
     }
